@@ -203,11 +203,17 @@ def get_pitch_world(wav_data, mel, hparams):
     # Here's to hoping it uses numpy stuff !
     f0, _ = world.harvest(wav_data.astype(np.double), hparams['audio_sample_rate'], f0_min, f0_max, time_step)
 
+    # Change padding
     len_diff = len(mel) - len(f0)
     if len_diff > 0:
-        f0 = np.pad(f0, [[0, len_diff]], mode='constant')
-    elif len_diff < 0:
-        f0 = f0[:len_diff]
+        pad_len = (len_diff + 1) // 2
+        f0 = np.pad(f0, [[pad_len, len_diff - pad_len]])
+    else:
+        pad_len = (1 - len_diff) // 2
+        rpad = pad_len + len_diff
+        if rpad != 0:
+            f0 = f0[pad_len:rpad]
+        f0 = f0[pad_len:]
     pitch_coarse = f0_to_coarse(f0, hparams)
     return f0, pitch_coarse
 
